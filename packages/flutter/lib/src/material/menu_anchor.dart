@@ -2932,6 +2932,7 @@ class _MenuLayout extends SingleChildLayoutDelegate {
     required this.orientation,
     required this.parentOrientation,
     required this.reservedPadding,
+    required this.keyboardHeight,
   });
 
   // Rectangle of underlying button, relative to the overlay's dimensions.
@@ -2965,6 +2966,9 @@ class _MenuLayout extends SingleChildLayoutDelegate {
 
   // How close to the edge of the safe area the menu will be placed.
   final EdgeInsetsGeometry reservedPadding;
+
+  // The height of the software keyboard.
+  final double keyboardHeight;
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
@@ -3015,7 +3019,11 @@ class _MenuLayout extends SingleChildLayoutDelegate {
     bool offLeftSide(double x) => x < allowedRect.left;
     bool offRightSide(double x) => x + childSize.width > allowedRect.right;
     bool offTop(double y) => y < allowedRect.top;
-    bool offBottom(double y) => y + childSize.height > allowedRect.bottom;
+    bool offBottom(double y) {
+      final double effectiveBottom = math.min(allowedRect.bottom, size.height - keyboardHeight);
+      return y + childSize.height > effectiveBottom;
+    }
+
     // Avoid going outside an area defined as the rectangle offset from the
     // edge of the screen by the button padding. If the menu is off of the screen,
     // move the menu to the other side of the button first, and then if it
@@ -3090,6 +3098,7 @@ class _MenuLayout extends SingleChildLayoutDelegate {
         orientation != oldDelegate.orientation ||
         parentOrientation != oldDelegate.parentOrientation ||
         reservedPadding != oldDelegate.reservedPadding ||
+        keyboardHeight != oldDelegate.keyboardHeight ||
         !setEquals(avoidBounds, oldDelegate.avoidBounds);
   }
 
@@ -3416,6 +3425,8 @@ class _Submenu extends StatelessWidget {
                 orientation: anchor._orientation,
                 parentOrientation: anchor._parent?._orientation ?? Axis.horizontal,
                 reservedPadding: reservedPadding,
+                keyboardHeight:
+                    View.of(context).viewInsets.bottom / View.of(context).devicePixelRatio,
               ),
               child: menuPanel,
             );
