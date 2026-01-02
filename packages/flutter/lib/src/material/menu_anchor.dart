@@ -2917,6 +2917,7 @@ class _MenuLayout extends SingleChildLayoutDelegate {
     required this.avoidBounds,
     required this.orientation,
     required this.parentOrientation,
+    required this.keyboardHeight,
   });
 
   // Rectangle of underlying button, relative to the overlay's dimensions.
@@ -2947,6 +2948,9 @@ class _MenuLayout extends SingleChildLayoutDelegate {
 
   // The orientation of this menu's parent.
   final Axis parentOrientation;
+
+  // The height of the software keyboard.
+  final double keyboardHeight;
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
@@ -2999,7 +3003,11 @@ class _MenuLayout extends SingleChildLayoutDelegate {
     bool offLeftSide(double x) => x < allowedRect.left;
     bool offRightSide(double x) => x + childSize.width > allowedRect.right;
     bool offTop(double y) => y < allowedRect.top;
-    bool offBottom(double y) => y + childSize.height > allowedRect.bottom;
+    bool offBottom(double y) {
+      final double effectiveBottom = math.min(allowedRect.bottom, size.height - keyboardHeight);
+      return y + childSize.height > effectiveBottom;
+    }
+
     // Avoid going outside an area defined as the rectangle offset from the
     // edge of the screen by the button padding. If the menu is off of the screen,
     // move the menu to the other side of the button first, and then if it
@@ -3073,6 +3081,7 @@ class _MenuLayout extends SingleChildLayoutDelegate {
         menuPadding != oldDelegate.menuPadding ||
         orientation != oldDelegate.orientation ||
         parentOrientation != oldDelegate.parentOrientation ||
+        keyboardHeight != oldDelegate.keyboardHeight ||
         !setEquals(avoidBounds, oldDelegate.avoidBounds);
   }
 
@@ -3397,6 +3406,8 @@ class _Submenu extends StatelessWidget {
                 menuPosition: menuPosition.position,
                 orientation: anchor._orientation,
                 parentOrientation: anchor._parent?._orientation ?? Axis.horizontal,
+                keyboardHeight:
+                    View.of(context).viewInsets.bottom / View.of(context).devicePixelRatio,
               ),
               child: menuPanel,
             );
